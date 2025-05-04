@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POV Thumbnail Generator</title>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.0/dist/ffmpeg.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        .neu-brutal {
+            background: white;
+            border: 3px solid black;
+            box-shadow: 5px 5px 0px black;
+            transition: all 0.2s ease;
+        }
+        .neu-brutal:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 7px 7px 0px black;
+        }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: #F0F3FF;
+        }
+        .template-card {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .template-card:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 md:p-8">
+    <main class="max-w-6xl mx-auto">
+        <header class="text-center mb-12">
+            <h1 class="text-4xl md:text-6xl font-bold mb-4">POV Thumbnail Creator</h1>
+            <p class="text-xl text-gray-700">Create stunning POV-style thumbnails in seconds!</p>
+        </header>
+
+        <div class="grid gap-8">
+            <div class="neu-brutal p-6 bg-white">
+                <h2 class="text-2xl font-bold mb-4">Upload Your Photo</h2>
+                <div class="border-dashed border-2 border-gray-400 rounded-lg p-8 text-center" id="dropZone">
+                    <i class="bi bi-cloud-upload text-4xl mb-4"></i>
+                    <p>Drag & Drop your image here or</p>
+                    <input type="file" id="fileInput" accept="image/*" class="hidden">
+                    <button onclick="document.getElementById('fileInput').click()" class="neu-brutal mt-4 px-6 py-2 bg-blue-500 text-white">
+                        Choose File
+                    </button>
+                </div>
+            </div>
+
+            <div class="neu-brutal p-6 bg-white">
+                <h2 class="text-2xl font-bold mb-4">Choose Template</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="templates">
+                    <div class="template-card neu-brutal p-4 text-center" data-template="classic">
+                        <div class="bg-gray-200 h-32 mb-2 flex items-center justify-center">Classic POV</div>
+                        <p>Classic POV Style</p>
+                    </div>
+                    <div class="template-card neu-brutal p-4 text-center" data-template="dramatic">
+                        <div class="bg-gray-200 h-32 mb-2 flex items-center justify-center">Dramatic</div>
+                        <p>Dramatic Angle</p>
+                    </div>
+                    <div class="template-card neu-brutal p-4 text-center" data-template="action">
+                        <div class="bg-gray-200 h-32 mb-2 flex items-center justify-center">Action</div>
+                        <p>Action Shot</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="neu-brutal p-6 bg-white">
+                <h2 class="text-2xl font-bold mb-4">Preview</h2>
+                <div id="previewContainer" class="w-full h-64 bg-gray-200 flex items-center justify-center">
+                    <p class="text-gray-500">Your thumbnail preview will appear here</p>
+                </div>
+                <button id="downloadBtn" class="neu-brutal mt-4 px-6 py-2 bg-green-500 text-white" disabled>
+                    Download Thumbnail
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let selectedTemplate = null;
+        let uploadedImage = null;
+
+        // File Upload Handling
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const downloadBtn = document.getElementById('downloadBtn');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('bg-gray-100');
+        });
+
+        dropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-gray-100');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('bg-gray-100');
+            const file = e.dataTransfer.files[0];
+            handleFile(file);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            handleFile(file);
+        });
+
+        function handleFile(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    uploadedImage = e.target.result;
+                    updatePreview();
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Template Selection
+        document.querySelectorAll('.template-card').forEach(template => {
+            template.addEventListener('click', () => {
+                document.querySelectorAll('.template-card').forEach(t => t.classList.remove('ring-4', 'ring-blue-500'));
+                template.classList.add('ring-4', 'ring-blue-500');
+                selectedTemplate = template.dataset.template;
+                updatePreview();
+            });
+        });
+
+        function updatePreview() {
+            if (uploadedImage && selectedTemplate) {
+                previewContainer.innerHTML = `<img src="${uploadedImage}" class="max-h-full max-w-full object-contain" alt="Preview">`;
+                downloadBtn.disabled = false;
+            }
+        }
+
+        downloadBtn.addEventListener('click', () => {
+            if (uploadedImage && selectedTemplate) {
+                const link = document.createElement('a');
+                link.download = 'pov-thumbnail.png';
+                link.href = uploadedImage;
+                link.click();
+            }
+        });
+    </script>
+<script>document.body.addEventListener('wheel', e => { if (!e.ctrlKey) return; e.preventDefault(); return }, { passive: false })</script>
+	</body>
+</html>
